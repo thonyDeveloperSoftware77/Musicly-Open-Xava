@@ -1,45 +1,52 @@
 package com.yourcompany.musicly.model;
-import java.util.*;
-import java.util.stream.*;
 
 import javax.persistence.*;
 
+import com.yourcompany.musicly.calculadores.CalculadorReproduccionesIniciales;
 import org.openxava.annotations.*;
-
 import lombok.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
-@View(members = "titulo; duracion; genero; album; artistas")
-@Getter @Setter // Lombok generará los getters y setters
+@View(members = "titulo; duracion; genero; album; artistas; reproducciones; popularidad")
+@Getter @Setter
 public class Cancion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
     @Column(length = 100, nullable = false)
-    String titulo;
+    private String titulo;
 
     @Column(nullable = false)
-    int duracion; // Duración en segundos
+    private int duracion; // Duración en segundos
 
     @ManyToOne(optional = false)
-    Genero genero;
+    private Genero genero;
 
     @ManyToOne(optional = false)
-    Album album;
+    private Album album;
 
     @ManyToMany
-    List<Artista> artistas;
-    
+    private List<Artista> artistas;
+
+    @DefaultValueCalculator(CalculadorReproduccionesIniciales.class)
+    @Column(nullable = false)
+    private int reproducciones; // Número de reproducciones
+
+    @ReadOnly
+    @Calculation("reproducciones")
+    private int popularidad; // Popularidad basada en reproducciones
+
     @Transient
     public List<String> getRolesDeArtistas() {
         return artistas.stream()
-                       .flatMap(artista -> artista.getRoles().stream())
-                       .map(Role::getDescripcion)
-                       .collect(Collectors.toList());
+                .flatMap(artista -> artista.getRoles().stream())
+                .map(Role::getDescripcion)
+                .collect(Collectors.toList());
     }
 }
-
-
-
